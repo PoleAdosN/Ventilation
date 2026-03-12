@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Console de Refroidissement Cyberpunk</title>
+    <title>Cyber Maintenance - Mobile</title>
     <style>
         :root {
             --neon-blue: #00f2ff;
@@ -19,28 +19,27 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start; /* Aligné vers le haut pour le portrait */
             min-height: 100vh;
             margin: 0;
-            padding: 10px;
+            padding: 20px 10px;
             box-sizing: border-box;
-            overflow-x: hidden;
-            transition: background-color 0.5s;
+            overflow: hidden;
+            touch-action: manipulation;
         }
 
-        /* Jauge de surchauffe adaptée */
+        /* Jauge de surchauffe */
         .heat-container {
-            width: 95%;
-            max-width: 800px;
-            margin-bottom: 20px;
+            width: 100%;
+            margin-bottom: 30px;
             text-align: center;
         }
 
         .heat-track {
-            height: 12px;
+            height: 10px;
             background: #1a1c25;
             border: 1px solid #333;
-            border-radius: 6px;
+            border-radius: 5px;
             overflow: hidden;
         }
 
@@ -48,8 +47,8 @@
             width: 0%;
             height: 100%;
             background: linear-gradient(90deg, var(--neon-blue), var(--neon-red));
-            box-shadow: 0 0 15px var(--neon-red);
-            transition: width 0.1s linear, filter 0.3s;
+            box-shadow: 0 0 10px var(--neon-red);
+            transition: width 0.1s linear;
         }
 
         .heat-label {
@@ -57,35 +56,34 @@
             font-size: 0.7rem;
             letter-spacing: 2px;
             margin-bottom: 5px;
-            text-transform: uppercase;
         }
 
-        /* Panneau de contrôle flexible */
+        /* Grille de contrôle en mode PORTRAIT */
         .control-grid {
             display: flex;
-            gap: 15px; /* Réduit pour mobile */
-            padding: 20px 10px;
-            background: #0f111a;
+            flex-direction: row; /* On garde les colonnes côte à côte */
+            gap: 10px;
+            padding: 15px 5px;
+            background: rgba(15, 17, 26, 0.9);
             border: 1px solid #222;
-            border-radius: 10px;
-            box-shadow: 0 0 50px rgba(0,0,0,1);
+            border-radius: 8px;
             width: 100%;
-            max-width: 500px;
-            justify-content: space-around;
+            box-sizing: border-box;
+            justify-content: space-between;
         }
 
         .column {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 15px;
-            flex: 1;
+            flex: 1; /* Chaque colonne prend 1/3 de la largeur */
+            max-width: 33%;
         }
 
-        /* Ventilateur plus petit pour mobile */
+        /* Ventilateur compact */
         .fan-frame {
-            width: 70px;
-            height: 70px;
+            width: 65px;
+            height: 65px;
             border: 2px solid #333;
             border-radius: 50%;
             position: relative;
@@ -93,11 +91,12 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            margin-bottom: 10px;
         }
 
         .fan-hub {
-            width: 10px;
-            height: 10px;
+            width: 8px;
+            height: 8px;
             background: var(--neon-blue);
             border-radius: 50%;
             z-index: 2;
@@ -107,19 +106,17 @@
             position: absolute;
             width: 100%;
             height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
 
         .blade {
             position: absolute;
-            width: 8px;
-            height: 28px;
-            background: #444;
-            border-radius: 4px;
-            transform-origin: bottom center;
+            width: 6px;
+            height: 25px;
+            background: #555;
+            left: 50%;
             bottom: 50%;
+            transform-origin: bottom center;
+            margin-left: -3px;
         }
 
         .blade:nth-child(2) { transform: rotate(120deg); }
@@ -127,102 +124,71 @@
 
         .percent-display {
             font-family: monospace;
-            font-size: 1rem;
+            font-size: 0.9rem;
             color: var(--neon-blue);
+            margin-bottom: 10px;
         }
 
-        /* Slider vertical mieux géré */
+        /* Sliders Verticaux Tactiles */
         .slider-wrap {
-            height: 140px;
+            height: 200px; /* Plus grand pour plus de précision au doigt */
             display: flex;
             align-items: center;
             justify-content: center;
-        }
-
-        /* Zone du slider optimisée pour le tactile */
-        .slider-wrap {
-            height: 160px; /* Légèrement plus grand pour laisser de la place au doigt */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            touch-action: none; /* Empêche le défilement de la page pendant qu'on glisse */
+            width: 40px;
         }
 
         input[type=range].vertical-slider {
             -webkit-appearance: none;
-            width: 140px; 
-            height: 50px; /* Hauteur augmentée pour agrandir la zone tactile */
+            width: 180px; /* Longueur physique du slider une fois tourné */
+            height: 60px; /* Largeur de la zone tactile pour le pouce */
             background: transparent;
             transform: rotate(-90deg);
-            cursor: pointer;
             outline: none;
+            margin: 0;
+            touch-action: none;
         }
 
-        /* La barre (track) */
-        input[type=range]::-webkit-slider-runnable-track {
-            height: 6px;
-            background: #222;
-            border-radius: 3px;
-        }
-
-        /* Le bouton (thumb) - AGRANDI POUR LE DOIGT */
-        input[type=range]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            height: 40px; /* Plus haut */
-            width: 30px;  /* Plus large */
-            background: var(--neon-blue);
-            margin-top: -17px; /* Centrage vertical ( (6/2) - (40/2) ) */
-            box-shadow: 0 0 15px var(--neon-blue);
-            border-radius: 4px;
-            border: none;
-        }
-
-        /* Compatibilité Firefox */
-        input[type=range]::-moz-range-thumb {
-            height: 40px;
-            width: 30px;
-            background: var(--neon-blue);
-            border: none;
-            border-radius: 4px;
-            box-shadow: 0 0 15px var(--neon-blue);
-        }
-
+        /* Barre du slider */
         input[type=range]::-webkit-slider-runnable-track {
             height: 4px;
             background: #222;
+            border-radius: 2px;
         }
 
+        /* Bouton du slider (Thumb) */
         input[type=range]::-webkit-slider-thumb {
             -webkit-appearance: none;
-            height: 30px;
-            width: 20px;
+            height: 45px;
+            width: 30px;
             background: var(--neon-blue);
-            margin-top: -13px;
-            box-shadow: 0 0 10px var(--neon-blue);
+            margin-top: -21px; /* (4/2) - (45/2) */
+            box-shadow: 0 0 15px var(--neon-blue);
+            border-radius: 3px;
+            cursor: pointer;
         }
 
         .unit-label {
+            margin-top: 10px;
             font-size: 0.6rem;
-            color: #555;
+            color: #444;
         }
 
         #status-msg {
-            margin-top: 25px;
-            font-size: 0.75rem;
-            letter-spacing: 1px;
-            height: 80px;
+            margin-top: 30px;
             text-align: center;
+            font-size: 0.8rem;
+            min-height: 80px;
         }
 
         .btn-reset {
-            margin-top: 10px;
-            padding: 12px 20px;
+            margin-top: 15px;
+            padding: 15px 30px;
             background: transparent;
             color: white;
-            border: 1px solid white;
+            border: 1px solid var(--neon-blue);
             font-family: 'Orbitron', sans-serif;
-            font-size: 0.8rem;
-            cursor: pointer;
+            text-transform: uppercase;
             display: none;
         }
 
@@ -230,18 +196,12 @@
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
         }
-
-        /* Ajustement spécial pour très petits écrans */
-        @media (max-width: 360px) {
-            .control-grid { gap: 5px; }
-            .fan-frame { width: 60px; height: 60px; }
-        }
     </style>
 </head>
 <body>
 
     <div class="heat-container">
-        <div class="heat-label">TEMP : <span id="temp-val">0</span>%</div>
+        <div class="heat-label">TEMPERATURE NOYAU : <span id="temp-val">0</span>%</div>
         <div class="heat-track">
             <div id="heat-bar"></div>
         </div>
@@ -250,49 +210,43 @@
     <div class="control-grid">
         <div class="column">
             <div class="fan-frame">
-                <div id="f0" class="blades-container">
-                    <div class="blade"></div><div class="blade"></div><div class="blade"></div>
-                </div>
+                <div id="f0" class="blades-container"><div class="blade"></div><div class="blade"></div><div class="blade"></div></div>
                 <div class="fan-hub"></div>
             </div>
             <div id="p0" class="percent-display">0%</div>
             <div class="slider-wrap">
                 <input type="range" class="vertical-slider" id="s0" min="0" max="10" step="1" value="0">
             </div>
-            <span class="unit-label">U-A</span>
+            <span class="unit-label">U-ALPHA</span>
         </div>
 
         <div class="column">
             <div class="fan-frame">
-                <div id="f1" class="blades-container">
-                    <div class="blade"></div><div class="blade"></div><div class="blade"></div>
-                </div>
+                <div id="f1" class="blades-container"><div class="blade"></div><div class="blade"></div><div class="blade"></div></div>
                 <div class="fan-hub"></div>
             </div>
             <div id="p1" class="percent-display">0%</div>
             <div class="slider-wrap">
                 <input type="range" class="vertical-slider" id="s1" min="0" max="10" step="1" value="0">
             </div>
-            <span class="unit-label">U-B</span>
+            <span class="unit-label">U-BETA</span>
         </div>
 
         <div class="column">
             <div class="fan-frame">
-                <div id="f2" class="blades-container">
-                    <div class="blade"></div><div class="blade"></div><div class="blade"></div>
-                </div>
+                <div id="f2" class="blades-container"><div class="blade"></div><div class="blade"></div><div class="blade"></div></div>
                 <div class="fan-hub"></div>
             </div>
             <div id="p2" class="percent-display">0%</div>
             <div class="slider-wrap">
                 <input type="range" class="vertical-slider" id="s2" min="0" max="10" step="1" value="0">
             </div>
-            <span class="unit-label">U-C</span>
+            <span class="unit-label">U-GAMMA</span>
         </div>
     </div>
 
     <div id="status-msg">
-        <div>MAINTENANCE REQUISE</div>
+        <div id="text">MAINTENANCE REQUISE</div>
         <button class="btn-reset" id="reset-btn" onclick="location.reload()">REDÉMARRER</button>
     </div>
 
@@ -303,21 +257,26 @@
         const heatBar = document.getElementById('heat-bar');
         const tempVal = document.getElementById('temp-val');
         const resetBtn = document.getElementById('reset-btn');
-        const statusText = document.querySelector('#status-msg div');
+        const statusText = document.getElementById('text');
         
         let heat = 0;
         let gameActive = true;
-        let currentError = 12; 
+        let currentError = 12;
         const duration = 300; 
 
-        const solution = [2,7,5];
+        const solution = [2,7,5)];
 
         function update() {
             if(!gameActive) return;
             const vals = sliders.map(s => parseInt(s.value));
             vals.forEach((v, i) => percents[i].textContent = (v * 10) + "%");
+            
             let totalError = 0;
             vals.forEach((v, i) => totalError += Math.abs(v - solution[i]));
+            
+            // Vibration légère lors du changement (Android)
+            if(window.navigator.vibrate) window.navigator.vibrate(10);
+
             currentError = totalError;
             fans.forEach((fan) => {
                 if (totalError === 0) {
@@ -331,6 +290,7 @@
                     fan.parentElement.querySelector('.fan-hub').style.background = "var(--neon-blue)";
                 }
             });
+
             if (totalError === 0) victory();
         }
 
@@ -341,26 +301,23 @@
             heat += (baseSpeed + malus);
             heatBar.style.width = Math.min(heat, 100) + "%";
             tempVal.textContent = Math.floor(heat);
-            if (currentError > 4) {
-                heatBar.style.filter = "hue-rotate(-50deg) saturate(2)";
-            } else {
-                heatBar.style.filter = "hue-rotate(0deg)";
-            }
             if(heat >= 100) gameOver();
         }, 100);
 
         function victory() {
             gameActive = false;
-            statusText.innerHTML = "<span style='color:var(--neon-green)'>SYSTÈME STABILISÉ</span>";
+            statusText.innerHTML = "<span style='color:var(--neon-green)'>NOYAU STABILISÉ</span>";
             resetBtn.style.display = "inline-block";
+            if(window.navigator.vibrate) window.navigator.vibrate([100, 50, 100]);
         }
 
         function gameOver() {
             gameActive = false;
-            statusText.innerHTML = "<span style='color:var(--neon-red)'>FUSION DU NOYAU</span>";
-            document.body.style.backgroundColor = "#1a0000";
+            statusText.innerHTML = "<span style='color:var(--neon-red)'>FUSION DU SYSTÈME</span>";
+            document.body.style.backgroundColor = "#200";
             sliders.forEach(s => s.disabled = true);
             resetBtn.style.display = "inline-block";
+            if(window.navigator.vibrate) window.navigator.vibrate(500);
         }
 
         sliders.forEach(s => s.addEventListener('input', update));
