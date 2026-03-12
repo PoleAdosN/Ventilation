@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Cyber Maintenance - Mobile</title>
+    <title>Cyber Maintenance Mobile</title>
     <style>
-:root {
+        :root {
             --neon-blue: #00f2ff;
             --neon-red: #ff0055;
             --neon-green: #39ff14;
@@ -22,12 +22,14 @@
             justify-content: flex-start;
             min-height: 100vh;
             margin: 0;
-            padding: env(safe-area-inset-top) 10px; /* Gestion encoche iPhone */
+            padding: env(safe-area-inset-top) 10px;
             box-sizing: border-box;
-            overflow-x: hidden; /* Empêche le scroll horizontal */
+            overflow-x: hidden;
+            touch-action: manipulation;
+            transition: background-color 0.5s;
         }
 
-        /* Jauge de surchauffe fluide */
+        /* Jauge de température fluide */
         .heat-container {
             width: 100%;
             max-width: 500px;
@@ -41,46 +43,57 @@
             border: 1px solid #333;
             border-radius: 6px;
             overflow: hidden;
+            box-shadow: inset 0 0 5px #000;
         }
 
         #heat-bar {
             width: 0%;
             height: 100%;
             background: linear-gradient(90deg, var(--neon-blue), var(--neon-red));
-            transition: width 0.1s linear;
+            box-shadow: 0 0 15px var(--neon-red);
+            transition: width 0.1s linear, filter 0.3s;
         }
 
-        /* Grille de contrôle AUTO-ADAPTATIVE */
+        .heat-label {
+            color: var(--neon-red);
+            font-size: 0.7rem;
+            letter-spacing: 2px;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+
+        /* Grille de contrôle AUTO-ADAPTATIVE (Portrait/Paysage) */
         .control-grid {
             display: flex;
             flex-direction: row; 
             justify-content: space-around;
             align-items: center;
-            width: 100%; /* Prend toute la largeur dispo */
-            max-width: 600px; /* Mais pas trop large sur tablette */
-            padding: 15px 5px;
+            width: 100%;
+            max-width: 600px;
+            padding: 20px 5px;
             background: rgba(15, 17, 26, 0.95);
             border: 1px solid #222;
             border-radius: 10px;
             box-sizing: border-box;
+            box-shadow: 0 0 40px rgba(0,0,0,1);
         }
 
         .column {
             display: flex;
             flex-direction: column;
             align-items: center;
-            flex: 1; /* Force les 3 colonnes à se partager l'espace équitablement */
-            min-width: 0; /* Empêche le débordement des flex-items */
+            flex: 1;
+            min-width: 0;
         }
 
-        /* Ventilateur ajustable selon l'écran */
+        /* Ventilateur ajustable (taille basée sur l'écran) */
         .fan-frame {
-            width: 18vw; /* Taille basée sur la largeur de l'écran */
+            width: 18vw;
             height: 18vw;
             max-width: 80px;
             max-height: 80px;
-            min-width: 50px;
-            min-height: 50px;
+            min-width: 55px;
+            min-height: 55px;
             border: 2px solid #333;
             border-radius: 50%;
             position: relative;
@@ -88,6 +101,15 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: border-color 0.3s;
+        }
+
+        .fan-hub {
+            width: 15%;
+            height: 15%;
+            background: var(--neon-blue);
+            border-radius: 50%;
+            z-index: 2;
         }
 
         .blades-container {
@@ -98,12 +120,13 @@
 
         .blade {
             position: absolute;
-            width: 8%;
+            width: 10%;
             height: 40%;
-            background: #555;
-            left: 46%;
+            background: #444;
+            left: 45%;
             bottom: 50%;
             transform-origin: bottom center;
+            border-radius: 4px;
         }
 
         .blade:nth-child(2) { transform: rotate(120deg); }
@@ -111,14 +134,15 @@
 
         .percent-display {
             font-family: monospace;
-            font-size: clamp(0.7rem, 3vw, 1rem); /* Taille de police adaptative */
+            font-size: clamp(0.8rem, 3.5vw, 1.1rem);
             color: var(--neon-blue);
-            margin: 10px 0;
+            margin: 12px 0;
+            text-shadow: 0 0 5px var(--neon-blue);
         }
 
-        /* Zone de Slider Tactile */
+        /* Zone de Slider Tactile Portrait */
         .slider-wrap {
-            height: clamp(150px, 40vh, 220px); /* Hauteur qui s'adapte à l'écran */
+            height: clamp(160px, 45vh, 250px);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -127,8 +151,8 @@
 
         input[type=range].vertical-slider {
             -webkit-appearance: none;
-            width: clamp(140px, 35vh, 200px); /* Longueur s'adapte à la hauteur dispo */
-            height: 60px;
+            width: clamp(140px, 40vh, 220px);
+            height: 60px; /* Zone tactile large */
             background: transparent;
             transform: rotate(-90deg);
             outline: none;
@@ -145,27 +169,42 @@
         input[type=range]::-webkit-slider-thumb {
             -webkit-appearance: none;
             height: 40px;
-            width: 30px;
+            width: 28px;
             background: var(--neon-blue);
             margin-top: -18px;
-            box-shadow: 0 0 10px var(--neon-blue);
+            box-shadow: 0 0 12px var(--neon-blue);
             border-radius: 3px;
         }
 
+        .unit-label {
+            margin-top: 10px;
+            font-size: 0.6rem;
+            color: #444;
+            letter-spacing: 1px;
+        }
+
         #status-msg {
-            margin-top: 20px;
+            margin-top: 25px;
             text-align: center;
-            width: 90%;
+            min-height: 100px;
+        }
+
+        #text {
+            font-size: 0.8rem;
+            letter-spacing: 2px;
+            margin-bottom: 15px;
         }
 
         .btn-reset {
-            margin-top: 10px;
-            padding: 12px 24px;
+            padding: 15px 25px;
             background: transparent;
             color: white;
             border: 1px solid var(--neon-blue);
             font-family: 'Orbitron', sans-serif;
+            text-transform: uppercase;
+            font-size: 0.7rem;
             display: none;
+            cursor: pointer;
         }
 
         @keyframes spin {
@@ -177,7 +216,7 @@
 <body>
 
     <div class="heat-container">
-        <div class="heat-label">TEMPERATURE NOYAU : <span id="temp-val">0</span>%</div>
+        <div class="heat-label">CORE TEMPERATURE : <span id="temp-val">0</span>%</div>
         <div class="heat-track">
             <div id="heat-bar"></div>
         </div>
@@ -222,8 +261,8 @@
     </div>
 
     <div id="status-msg">
-        <div id="text">MAINTENANCE REQUISE</div>
-        <button class="btn-reset" id="reset-btn" onclick="location.reload()">REDÉMARRER</button>
+        <div id="text">STABILISATION REQUISE</div>
+        <button class="btn-reset" id="reset-btn" onclick="location.reload()">REBOOT SYSTEM</button>
     </div>
 
     <script>
@@ -238,9 +277,9 @@
         let heat = 0;
         let gameActive = true;
         let currentError = 12;
-        const duration = 300; 
+        const duration = 300; // 5 minutes
 
-        const solution = [2,7,5)];
+        const solution =[2,7,5];
 
         function update() {
             if(!gameActive) return;
@@ -250,7 +289,6 @@
             let totalError = 0;
             vals.forEach((v, i) => totalError += Math.abs(v - solution[i]));
             
-            // Vibration légère lors du changement (Android)
             if(window.navigator.vibrate) window.navigator.vibrate(10);
 
             currentError = totalError;
@@ -277,20 +315,27 @@
             heat += (baseSpeed + malus);
             heatBar.style.width = Math.min(heat, 100) + "%";
             tempVal.textContent = Math.floor(heat);
+
+            if (currentError > 4) {
+                heatBar.style.filter = "hue-rotate(-50deg) saturate(2)";
+            } else {
+                heatBar.style.filter = "hue-rotate(0deg)";
+            }
+
             if(heat >= 100) gameOver();
         }, 100);
 
         function victory() {
             gameActive = false;
-            statusText.innerHTML = "<span style='color:var(--neon-green)'>NOYAU STABILISÉ</span>";
+            statusText.innerHTML = "<span style='color:var(--neon-green)'>SUCCESS : CORE STABLE</span>";
             resetBtn.style.display = "inline-block";
             if(window.navigator.vibrate) window.navigator.vibrate([100, 50, 100]);
         }
 
         function gameOver() {
             gameActive = false;
-            statusText.innerHTML = "<span style='color:var(--neon-red)'>FUSION DU SYSTÈME</span>";
-            document.body.style.backgroundColor = "#200";
+            statusText.innerHTML = "<span style='color:var(--neon-red)'>CRITICAL ERROR : MELTDOWN</span>";
+            document.body.style.backgroundColor = "#1a0000";
             sliders.forEach(s => s.disabled = true);
             resetBtn.style.display = "inline-block";
             if(window.navigator.vibrate) window.navigator.vibrate(500);
