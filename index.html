@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Cyber Maintenance - Mobile</title>
     <style>
-        :root {
+:root {
             --neon-blue: #00f2ff;
             --neon-red: #ff0055;
             --neon-green: #39ff14;
@@ -19,27 +19,27 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: flex-start; /* Aligné vers le haut pour le portrait */
+            justify-content: flex-start;
             min-height: 100vh;
             margin: 0;
-            padding: 20px 10px;
+            padding: env(safe-area-inset-top) 10px; /* Gestion encoche iPhone */
             box-sizing: border-box;
-            overflow: hidden;
-            touch-action: manipulation;
+            overflow-x: hidden; /* Empêche le scroll horizontal */
         }
 
-        /* Jauge de surchauffe */
+        /* Jauge de surchauffe fluide */
         .heat-container {
             width: 100%;
-            margin-bottom: 30px;
+            max-width: 500px;
+            margin: 20px 0;
             text-align: center;
         }
 
         .heat-track {
-            height: 10px;
+            height: 12px;
             background: #1a1c25;
             border: 1px solid #333;
-            border-radius: 5px;
+            border-radius: 6px;
             overflow: hidden;
         }
 
@@ -47,43 +47,40 @@
             width: 0%;
             height: 100%;
             background: linear-gradient(90deg, var(--neon-blue), var(--neon-red));
-            box-shadow: 0 0 10px var(--neon-red);
             transition: width 0.1s linear;
         }
 
-        .heat-label {
-            color: var(--neon-red);
-            font-size: 0.7rem;
-            letter-spacing: 2px;
-            margin-bottom: 5px;
-        }
-
-        /* Grille de contrôle en mode PORTRAIT */
+        /* Grille de contrôle AUTO-ADAPTATIVE */
         .control-grid {
             display: flex;
-            flex-direction: row; /* On garde les colonnes côte à côte */
-            gap: 10px;
+            flex-direction: row; 
+            justify-content: space-around;
+            align-items: center;
+            width: 100%; /* Prend toute la largeur dispo */
+            max-width: 600px; /* Mais pas trop large sur tablette */
             padding: 15px 5px;
-            background: rgba(15, 17, 26, 0.9);
+            background: rgba(15, 17, 26, 0.95);
             border: 1px solid #222;
-            border-radius: 8px;
-            width: 100%;
+            border-radius: 10px;
             box-sizing: border-box;
-            justify-content: space-between;
         }
 
         .column {
             display: flex;
             flex-direction: column;
             align-items: center;
-            flex: 1; /* Chaque colonne prend 1/3 de la largeur */
-            max-width: 33%;
+            flex: 1; /* Force les 3 colonnes à se partager l'espace équitablement */
+            min-width: 0; /* Empêche le débordement des flex-items */
         }
 
-        /* Ventilateur compact */
+        /* Ventilateur ajustable selon l'écran */
         .fan-frame {
-            width: 65px;
-            height: 65px;
+            width: 18vw; /* Taille basée sur la largeur de l'écran */
+            height: 18vw;
+            max-width: 80px;
+            max-height: 80px;
+            min-width: 50px;
+            min-height: 50px;
             border: 2px solid #333;
             border-radius: 50%;
             position: relative;
@@ -91,15 +88,6 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 10px;
-        }
-
-        .fan-hub {
-            width: 8px;
-            height: 8px;
-            background: var(--neon-blue);
-            border-radius: 50%;
-            z-index: 2;
         }
 
         .blades-container {
@@ -110,13 +98,12 @@
 
         .blade {
             position: absolute;
-            width: 6px;
-            height: 25px;
+            width: 8%;
+            height: 40%;
             background: #555;
-            left: 50%;
+            left: 46%;
             bottom: 50%;
             transform-origin: bottom center;
-            margin-left: -3px;
         }
 
         .blade:nth-child(2) { transform: rotate(120deg); }
@@ -124,71 +111,60 @@
 
         .percent-display {
             font-family: monospace;
-            font-size: 0.9rem;
+            font-size: clamp(0.7rem, 3vw, 1rem); /* Taille de police adaptative */
             color: var(--neon-blue);
-            margin-bottom: 10px;
+            margin: 10px 0;
         }
 
-        /* Sliders Verticaux Tactiles */
+        /* Zone de Slider Tactile */
         .slider-wrap {
-            height: 200px; /* Plus grand pour plus de précision au doigt */
+            height: clamp(150px, 40vh, 220px); /* Hauteur qui s'adapte à l'écran */
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 40px;
+            width: 100%;
         }
 
         input[type=range].vertical-slider {
             -webkit-appearance: none;
-            width: 180px; /* Longueur physique du slider une fois tourné */
-            height: 60px; /* Largeur de la zone tactile pour le pouce */
+            width: clamp(140px, 35vh, 200px); /* Longueur s'adapte à la hauteur dispo */
+            height: 60px;
             background: transparent;
             transform: rotate(-90deg);
             outline: none;
-            margin: 0;
+            cursor: pointer;
             touch-action: none;
         }
 
-        /* Barre du slider */
         input[type=range]::-webkit-slider-runnable-track {
             height: 4px;
             background: #222;
             border-radius: 2px;
         }
 
-        /* Bouton du slider (Thumb) */
         input[type=range]::-webkit-slider-thumb {
             -webkit-appearance: none;
-            height: 45px;
+            height: 40px;
             width: 30px;
             background: var(--neon-blue);
-            margin-top: -21px; /* (4/2) - (45/2) */
-            box-shadow: 0 0 15px var(--neon-blue);
+            margin-top: -18px;
+            box-shadow: 0 0 10px var(--neon-blue);
             border-radius: 3px;
-            cursor: pointer;
-        }
-
-        .unit-label {
-            margin-top: 10px;
-            font-size: 0.6rem;
-            color: #444;
         }
 
         #status-msg {
-            margin-top: 30px;
+            margin-top: 20px;
             text-align: center;
-            font-size: 0.8rem;
-            min-height: 80px;
+            width: 90%;
         }
 
         .btn-reset {
-            margin-top: 15px;
-            padding: 15px 30px;
+            margin-top: 10px;
+            padding: 12px 24px;
             background: transparent;
             color: white;
             border: 1px solid var(--neon-blue);
             font-family: 'Orbitron', sans-serif;
-            text-transform: uppercase;
             display: none;
         }
 
@@ -196,7 +172,6 @@
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
         }
-    </style>
 </head>
 <body>
 
