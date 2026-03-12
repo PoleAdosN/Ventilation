@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Console de Refroidissement Cyberpunk</title>
+    <style>
+        :root {
+            --neon-blue: #00f2ff;
+            --neon-red: #ff0055;
+            --neon-green: #39ff14;
+            --bg-dark: #050608;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: white;
+            font-family: 'Orbitron', sans-serif, Arial;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            transition: background-color 0.5s;
+        }
+
+        /* Jauge de surchauffe dynamique */
+        .heat-container {
+            width: 80%;
+            max-width: 800px;
+            margin-bottom: 50px;
+            text-align: center;
+        }
+
+        .heat-track {
+            height: 12px;
+            background: #1a1c25;
+            border: 1px solid #333;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: inset 0 0 5px #000;
+        }
+
+        #heat-bar {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, var(--neon-blue), var(--neon-red));
+            box-shadow: 0 0 15px var(--neon-red);
+            transition: width 0.1s linear, filter 0.3s;
+        }
+
+        .heat-label {
+            color: var(--neon-red);
+            font-size: 0.8rem;
+            letter-spacing: 3px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        /* Panneau de contrôle */
+        .control-grid {
+            display: flex;
+            gap: 60px;
+            padding: 40px;
+            background: #0f111a;
+            border: 1px solid #222;
+            border-radius: 10px;
+            box-shadow: 0 0 50px rgba(0,0,0,1);
+            position: relative;
+        }
+
+        .column {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 25px;
+            width: 120px;
+        }
+
+        /* Ventilateur avec pales */
+        .fan-frame {
+            width: 100px;
+            height: 100px;
+            border: 3px solid #333;
+            border-radius: 50%;
+            position: relative;
+            background: #111;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: border-color 0.3s;
+        }
+
+        .fan-hub {
+            width: 15px;
+            height: 15px;
+            background: var(--neon-blue);
+            border-radius: 50%;
+            z-index: 2;
+            box-shadow: 0 0 10px var(--neon-blue);
+        }
+
+        .blades-container {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .blade {
+            position: absolute;
+            width: 10px;
+            height: 40px;
+            background: #444;
+            border-radius: 50% 50% 0 0;
+            transform-origin: bottom center;
+            bottom: 50%;
+        }
+
+        .blade:nth-child(2) { transform: rotate(120deg); }
+        .blade:nth-child(3) { transform: rotate(240deg); }
+
+        /* Pourcentage et Slider */
+        .percent-display {
+            font-family: monospace;
+            font-size: 1.2rem;
+            color: var(--neon-blue);
+            text-shadow: 0 0 5px var(--neon-blue);
+        }
+
+        input[type=range].vertical-slider {
+            -webkit-appearance: none;
+            width: 150px;
+            height: 40px;
+            background: transparent;
+            transform: rotate(-90deg);
+            margin: 60px 0;
+            cursor: pointer;
+        }
+
+        input[type=range]::-webkit-slider-runnable-track {
+            height: 4px;
+            background: #222;
+            border-radius: 2px;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 25px;
+            width: 15px;
+            background: var(--neon-blue);
+            margin-top: -10px;
+            box-shadow: 0 0 10px var(--neon-blue);
+        }
+
+        #status-msg {
+            margin-top: 40px;
+            font-size: 0.9rem;
+            letter-spacing: 2px;
+            height: 60px;
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+        /* Bouton Reset */
+        .btn-reset {
+            margin-top: 15px;
+            padding: 10px 20px;
+            background: transparent;
+            color: white;
+            border: 1px solid white;
+            font-family: 'Orbitron', sans-serif;
+            cursor: pointer;
+            display: none; /* Caché par défaut */
+            transition: all 0.3s;
+        }
+
+        .btn-reset:hover {
+            background: white;
+            color: black;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="heat-container">
+        <div class="heat-label">TEMPÉRATURE NOYAU : <span id="temp-val">0</span>%</div>
+        <div class="heat-track">
+            <div id="heat-bar"></div>
+        </div>
+    </div>
+
+    <div class="control-grid">
+        <div class="column">
+            <div class="fan-frame">
+                <div id="f0" class="blades-container">
+                    <div class="blade"></div><div class="blade"></div><div class="blade"></div>
+                </div>
+                <div class="fan-hub"></div>
+            </div>
+            <div id="p0" class="percent-display">0%</div>
+            <input type="range" class="vertical-slider" id="s0" min="0" max="10" step="1" value="0">
+            <span>UNITÉ-A</span>
+        </div>
+
+        <div class="column">
+            <div class="fan-frame">
+                <div id="f1" class="blades-container">
+                    <div class="blade"></div><div class="blade"></div><div class="blade"></div>
+                </div>
+                <div class="fan-hub"></div>
+            </div>
+            <div id="p1" class="percent-display">0%</div>
+            <input type="range" class="vertical-slider" id="s1" min="0" max="10" step="1" value="0">
+            <span>UNITÉ-B</span>
+        </div>
+
+        <div class="column">
+            <div class="fan-frame">
+                <div id="f2" class="blades-container">
+                    <div class="blade"></div><div class="blade"></div><div class="blade"></div>
+                </div>
+                <div class="fan-hub"></div>
+            </div>
+            <div id="p2" class="percent-display">0%</div>
+            <input type="range" class="vertical-slider" id="s2" min="0" max="10" step="1" value="0">
+            <span>UNITÉ-C</span>
+        </div>
+    </div>
+
+    <div id="status-msg">
+        <div>INTERCONNEXION REQUISE</div>
+        <button class="btn-reset" id="reset-btn" onclick="location.reload()">RÉINITIALISER LE SYSTÈME</button>
+    </div>
+
+    <script>
+        const sliders = [document.getElementById('s0'), document.getElementById('s1'), document.getElementById('s2')];
+        const percents = [document.getElementById('p0'), document.getElementById('p1'), document.getElementById('p2')];
+        const fans = [document.getElementById('f0'), document.getElementById('f1'), document.getElementById('f2')];
+        const heatBar = document.getElementById('heat-bar');
+        const tempVal = document.getElementById('temp-val');
+        const resetBtn = document.getElementById('reset-btn');
+        const statusText = document.querySelector('#status-msg div');
+        
+        let heat = 0;
+        let gameActive = true;
+        let currentError = 12; 
+        const duration = 300; 
+
+        // Solution aléatoire
+        const solution = [2, 7, 4];
+
+        function update() {
+            if(!gameActive) return;
+
+            const vals = sliders.map(s => parseInt(s.value));
+            vals.forEach((v, i) => percents[i].textContent = (v * 10) + "%");
+
+            let totalError = 0;
+            vals.forEach((v, i) => totalError += Math.abs(v - solution[i]));
+            currentError = totalError;
+
+            fans.forEach((fan) => {
+                if (totalError === 0) {
+                    fan.style.animation = "none";
+                    fan.parentElement.style.borderColor = "var(--neon-green)";
+                    fan.parentElement.querySelector('.fan-hub').style.background = "var(--neon-green)";
+                } else {
+                    const speed = Math.max(0.1, 1.5 / totalError);
+                    fan.style.animation = `spin ${speed}s linear infinite`;
+                    fan.parentElement.style.borderColor = "#333";
+                    fan.parentElement.querySelector('.fan-hub').style.background = "var(--neon-blue)";
+                }
+            });
+
+            if (totalError === 0) victory();
+        }
+
+        const heatTimer = setInterval(() => {
+            if(!gameActive) return;
+
+            let baseSpeed = (100 / (duration * 10)); 
+            let malus = currentError * 0.02; 
+            
+            heat += (baseSpeed + malus);
+            heatBar.style.width = Math.min(heat, 100) + "%";
+            tempVal.textContent = Math.floor(heat);
+
+            if (currentError > 4) {
+                heatBar.style.filter = "hue-rotate(-50deg) saturate(2)";
+            } else {
+                heatBar.style.filter = "hue-rotate(0deg)";
+            }
+
+            if(heat >= 100) gameOver();
+        }, 100);
+
+        function victory() {
+            gameActive = false;
+            statusText.innerHTML = "<span style='color:var(--neon-green)'>CORE STABILISÉ : CONNEXION ÉTABLIE</span>";
+            resetBtn.style.display = "inline-block";
+        }
+
+        function gameOver() {
+            gameActive = false;
+            statusText.innerHTML = "<span style='color:var(--neon-red)'>FUSION DU NOYAU : SYSTÈME PERDU</span>";
+            document.body.style.backgroundColor = "#1a0000";
+            sliders.forEach(s => s.disabled = true);
+            resetBtn.style.display = "inline-block";
+        }
+
+        sliders.forEach(s => s.addEventListener('input', update));
+        update();
+    </script>
+</body>
+</html>
